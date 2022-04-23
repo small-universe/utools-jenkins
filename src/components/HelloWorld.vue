@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <h1>{{ msg }}</h1>
+    <h1>jenkins</h1>
     <p>
       For a guide and recipes on how to configure / customize this project,<br>
       check out the
@@ -24,23 +24,32 @@
     <ul>
       <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
       <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
+      <li><a href="javascript:;" v-on:click="api3()" rel="noopener">构建Job</a></li>
+      <li><a href="javascript:;" v-on:click="api1()" rel="noopener">接口1</a></li>
+      <li><a href="javascript:;" v-on:click="api2()" rel="noopener">接口2</a></li>
     </ul>
   </div>
 </template>
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
+import { reactive, toRefs } from 'vue'
+import { getBaseInfo, getJenkinsCrumb,buildJob } from '@/api/jenkins'
 
 @Options({
-  props: {
-    msg: String
+  methods: {
+    api1() {
+      getBaseInfo()
+    },
+    api2() {
+      getJenkinsCrumb()
+    },
+    api3() {
+      buildJob("demo",null)
+    }
   }
 })
 export default class HelloWorld extends Vue {
-  msg!: string
 }
 </script>
 
