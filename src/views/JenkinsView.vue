@@ -9,32 +9,12 @@
       default-value="signin"
       size="large"
       animated
-      pane-style="padding-left: 4px; padding-right: 4px; box-sizing: border-box;"
-    >
-      <n-tab-pane name="signin" tab="登录">
-        <n-form>
-          <n-form-item-row label="用户名">
-            <n-input />
-          </n-form-item-row>
-          <n-form-item-row label="密码">
-            <n-input />
-          </n-form-item-row>
-        </n-form>
-        <n-button type="primary" block secondary strong> 登录 </n-button>
+      pane-style="padding-top: 15px;padding-left: 4px; padding-right: 4px; box-sizing: border-box;">
+      <n-tab-pane name="signin" tab="任务">
+        <jenkins/>
       </n-tab-pane>
-      <n-tab-pane name="signup" tab="注册">
-        <n-form>
-          <n-form-item-row label="用户名">
-            <n-input />
-          </n-form-item-row>
-          <n-form-item-row label="密码">
-            <n-input />
-          </n-form-item-row>
-          <n-form-item-row label="重复密码">
-            <n-input />
-          </n-form-item-row>
-        </n-form>
-        <n-button type="primary" block secondary strong> 注册 </n-button>
+      <n-tab-pane name="signup" tab="配置">
+        <config/>
       </n-tab-pane>
     </n-tabs>
   </div>
@@ -42,22 +22,28 @@
 
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
+import Jenkins from "@/components/Jenkins.vue"; // @ is an alias to /src
+import Config from "@/components/Config.vue";
 
 @Options({
   components: {
-    HelloWorld,
+    Jenkins,
+    Config
   },
 })
 export default class HomeView extends Vue {}
 </script>
 
 <style scoped>
+  .n-tabs .n-tab-pane {
+    padding: 0;
+  }
+
   .card-tabs .n-tabs-nav--bar-type {
     padding-left: 4px;
   }
 
   .jobs-list {
-    padding: 0 5px;
+    padding: 0 10px;
   }
 </style>

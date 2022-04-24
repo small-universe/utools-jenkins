@@ -7,7 +7,7 @@
 	"logo": "jenkins.png",
 	"homepage": "https://github.com/zyw/utools-jenkins",
 	"development": {
-		"main": "http://localhost:8081"
+		"main": "http://localhost:8080"
 	},
 	"features": [
 		{

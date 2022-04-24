@@ -10,10 +10,17 @@ import {
     NTabs,
     NTabPane,
     NForm,
-    NFormItemRow,
+    NFormItem,
     NInput,
+    NGrid,
+    NGi,
+    NSelect,
+    NDataTable,
+    NIcon,
+    NModal,
     NConfigProvider,
-    NDialogProvider
+    NDialogProvider,
+    NMessageProvider
 } from 'naive-ui'
 
 const naive = create({
@@ -22,10 +29,17 @@ const naive = create({
         NTabs,
         NTabPane,
         NForm,
-        NFormItemRow,
+        NFormItem,
         NInput,
+        NGrid,
+        NGi,
+        NSelect,
+        NDataTable,
+        NIcon,
+        NModal,
         NConfigProvider,
-        NDialogProvider
+        NDialogProvider,
+        NMessageProvider
     ]
 })
 
