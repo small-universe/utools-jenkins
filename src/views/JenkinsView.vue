@@ -1,19 +1,15 @@
 <template>
-  <!-- <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld />
-  </div> -->
   <div class="jobs-list">
     <n-tabs
       class="card-tabs"
-      default-value="signin"
+      default-value="jobs"
       size="large"
       animated
       pane-style="padding-top: 15px;padding-left: 4px; padding-right: 4px; box-sizing: border-box;">
-      <n-tab-pane name="signin" tab="任务">
+      <n-tab-pane name="jobs" tab="任务">
         <jenkins/>
       </n-tab-pane>
-      <n-tab-pane name="signup" tab="配置">
+      <n-tab-pane name="config" tab="配置">
         <config/>
       </n-tab-pane>
     </n-tabs>

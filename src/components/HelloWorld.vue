@@ -34,18 +34,18 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import { reactive, toRefs } from 'vue'
-import { getBaseInfo, getJenkinsCrumb,buildJob } from '@/api/jenkins'
+// import { getBaseInfo, getJenkinsCrumb,buildJob } from '@/api/jenkins'
 
 @Options({
   methods: {
     api1() {
-      getBaseInfo()
+      // getBaseInfo()
     },
     api2() {
-      getJenkinsCrumb()
+      // getJenkinsCrumb()
     },
     api3() {
-      buildJob("demo",null)
+      // buildJob("demo",null)
     }
   }
 })

@@ -31,7 +31,7 @@ const createAxios = (config: any) => {
         baseURL: config.url,
         auth: {
             username: config.username,
-            password: config.password
+            password: config.token
         }
     })
     return _axios
@@ -44,13 +44,13 @@ const axiosConfig = (config: any) => {
   // 请求拦截器
   _axios.interceptors.request.use(
       conf => {
-          const token = '5b6deea38acf451f88519660f36fea58'
+          //const token = '5b6deea38acf451f88519660f36fea58'
           // 从vuex里获取token
           // const token = store.state.token
           // 如果token存在就在请求头里添加
-          if (token) {
-            conf.headers!.token = token
-          }
+          //if (token) {
+          //  conf.headers!.token = token
+          //}
           return conf
         },
         error => {
@@ -70,12 +70,12 @@ const axiosConfig = (config: any) => {
             parent.location.reload()
           }
           // 只返回response中的data数据
-          return response.data
+          return response
         },
         error => {
           if (error) {
             // 请求已发出，但不在2xx范围内
-            errorHandle(error.status, error.data.msg)
+            errorHandle(error.response.status, error.response.data.message)
             return Promise.reject(error)
           } else {
             // 断网

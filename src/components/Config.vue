@@ -1,6 +1,6 @@
 <script lang="ts">
 import { h, defineComponent,ref,computed } from 'vue'
-import { FormInst, NButton, NIcon, useMessage,useDialog } from "naive-ui";
+import { FormInst, NButton, NIcon, useMessage,useDialog, FormItemRule } from "naive-ui";
 import { Edit,Delete } from '@vicons/carbon'
 import utils from "@/utils/toolsbox"
 
@@ -77,13 +77,27 @@ const createColumns = ({ editConfig }:{ editConfig: (row: any) => void},{ delete
 
 const initModel = () => {
     const obj = {
+        _id: null,
         name: null,
         url: null,
         username: null,
         token: null,
+        _rev: null
       }
     return obj
 }
+
+const strRegex = '^((https|http|ftp|rtsp|mms)?://)'
+      + '?(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
+      + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
+      + '|' // 允许IP和DOMAIN（域名）
+      + '([0-9a-z_!~*\'()-]+.)*' // 域名- www.
+      + '([0-9a-z][0-9a-z-]{0,61})?[0-9a-z].' // 二级域名
+      + '[a-z]{2,6})' // first level domain- .com or .museum
+      + '(:[0-9]{1,5})?' // 端口- :80
+      + '((/?)|' // a slash isn't required if there is no file name
+      + '(/[0-9a-z_!~*\'().;?:@&=+$,%#-]+)+/?)$'
+const oRegUrl = new RegExp(strRegex);
 
 const rules = {
         name: {
@@ -94,7 +108,14 @@ const rules = {
         url: {
           required: true,
           trigger: ['blur', 'input'],
-          message: '请输入Jenkins URL'
+          validator(rule: FormItemRule, value: string) {
+              if(!value) {
+                  return new Error("请输入Jenkins URL")
+              } else if(!oRegUrl.test(value)) {
+                  return new Error("请输入正确的Url地址")
+              }
+              return true
+          }
         },
         username: {
           required: true,
@@ -132,7 +153,6 @@ export default defineComponent({
         const message = useMessage()
         const dialog = useDialog()
         let modelRef = ref(initModel())
-        const modifyConfig = ref<any>(null)
 
         let dataList = ref<any>(getConfList())
 
@@ -146,14 +166,14 @@ export default defineComponent({
                 if (!errors) {
                    
                     let config:any = {
-                       _id: modifyConfig.value.id || "",
+                       _id: modelRef.value._id || "",
                         data: {
                             name: modelRef.value.name,
                             url: modelRef.value.url,
                             username: modelRef.value.username,
                             token: modelRef.value.token
                         },
-                        _rev: modifyConfig.value.rev
+                        _rev: modelRef.value._rev
                     }
 
                     if(!config._id) {
@@ -173,7 +193,6 @@ export default defineComponent({
                     message.success("保存成功")
 
                     modelRef.value = initModel()
-                    modifyConfig.value = {}
 
                     showModalRef.value = false
                 } else {
@@ -181,12 +200,21 @@ export default defineComponent({
                     message.error("验证失败")
                 }
             })
+            
         }
 
         const editConfig = (rowData: any) => {
-            modelRef.value = rowData.data
+
+            modelRef.value = {
+                _id: rowData._id,
+                name: rowData.data.name,
+                url: rowData.data.url,
+                username: rowData.data.username,
+                token: rowData.data.token,
+                _rev: rowData._rev
+            } as any
+
             showModalRef.value = true
-            modifyConfig.value = {id: rowData._id, rev: rowData._rev}
         }
 
         const deleteConfig = (rowData: any) => {
@@ -207,6 +235,10 @@ export default defineComponent({
             
         }
 
+        const handleCloseModel = () => {
+            modelRef.value = initModel()
+        }
+
         return {
             formRef,
             showEditModal: showModalRef,
@@ -217,7 +249,7 @@ export default defineComponent({
             model: modelRef,
             rules,
             size: ref('medium'),
-            modifyConfig
+            handleCloseModel
         }
     },
 })
@@ -235,6 +267,7 @@ export default defineComponent({
         title="Dialog" 
         positive-text="保存"
         @positive-click="handleSaveConfig"
+        @close="handleCloseModel"
         :close-on-esc="false"
         :mask-closable="false"
         :showIcon="false"
@@ -265,7 +298,7 @@ export default defineComponent({
                     <n-input v-model:value="model.username" placeholder="用户名" />
                 </n-form-item>
                 <n-form-item label="Token" path="token">
-                    <n-input v-model:value="model.token" placeholder="令牌" />
+                    <n-input v-model:value="model.token" type="password" show-password-on="mousedown" placeholder="令牌"/>
                 </n-form-item>
             </n-form>
         </div>

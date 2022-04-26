@@ -31,6 +31,80 @@ let utils = {
     s[8] = s[13] = s[18] = s[23] = "-";
     return s.join("");
   },
+  jobStatusToIcon: function(job:any) {
+    switch (job.color) {
+      case 'red':
+        job.icon = 'last-failed'
+        job.anime = false
+        job.color = 'icon-red'
+        break
+      case 'red_anime':
+        job.icon = 'last-failed'
+        job.anime = true
+        job.color = 'icon-red'
+        break
+      case 'yellow':
+        job.icon = 'last-unstable'
+        job.anime = false
+        job.color = 'icon-yellow'
+        break
+      case 'yellow_anime':
+        job.icon = 'last-unstable'
+        job.anime = true
+        job.color = 'icon-yellow'
+        break
+      case 'blue':
+        job.icon = 'last-successful'
+        job.anime = false
+        job.color = 'icon-blue'
+        break
+      case 'blue_anime':
+        job.icon = 'last-successful'
+        job.anime = true
+        job.color = 'icon-blue'
+        break
+      case 'grey':
+        job.icon = 'last-disabled'
+        job.anime = false
+        job.color = 'icon-disabled'
+        break
+      case 'grey_anime':
+        job.icon = 'last-disabled'
+        job.anime = true
+        job.color = 'icon-disabled'
+        break
+      case 'disabled':
+        job.icon = 'last-disabled'
+        job.anime = false
+        job.color = 'icon-disabled'
+        break
+      case 'disabled_anime':
+        job.icon = 'last-disabled'
+        job.anime = true
+        job.color = 'icon-disabled'
+        break
+      case 'aborted':
+        job.icon = 'last-aborted'
+        job.anime = false
+        job.color = 'icon-aborted'
+        break
+      case 'aborted_anime':
+        job.icon = 'last-aborted'
+        job.anime = true
+        job.color = 'icon-aborted'
+        break
+      case 'notbuilt':
+        job.icon = 'never-built'
+        job.anime = false
+        job.color = 'icon-nobuilt'
+        break
+      case 'notbuilt_anime':
+        job.icon = 'never-built'
+        job.anime = true
+        job.color = 'icon-nobuilt'
+        break
+    }
+  },
   parseDomain: function (uri: string) {
     if (!uri || uri.length === 0) {
       return ''

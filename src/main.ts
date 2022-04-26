@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import router from './router'
 import store from './store'
 import {
     // create naive ui
@@ -18,6 +17,7 @@ import {
     NDataTable,
     NIcon,
     NModal,
+    NTime,
     NConfigProvider,
     NDialogProvider,
     NMessageProvider
@@ -37,6 +37,7 @@ const naive = create({
         NDataTable,
         NIcon,
         NModal,
+        NTime,
         NConfigProvider,
         NDialogProvider,
         NMessageProvider
@@ -45,6 +46,5 @@ const naive = create({
 
 createApp(App)
 .use(store)
-.use(router)
 .use(naive)
 .mount('#app')
