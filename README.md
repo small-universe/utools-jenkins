@@ -1,3 +1,10 @@
+# jenkins Token获取
+## 1. 第一步
+![用户列表](imgs/1.png)
+
+## 2. 第二步
+![获取Token](imgs/2.png)
+
 # utools-jenkins
 
 ## Project setup
