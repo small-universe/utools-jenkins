@@ -19,7 +19,11 @@ const state = {
   queueItem: {}
 }
 
-const getters = {}
+const getters = {
+  jenkinsUrl: (state: any) => {
+    return state.config.url
+  }
+}
 
 const mutations = {
   configMuts(state:any, config:any) {

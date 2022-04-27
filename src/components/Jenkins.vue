@@ -9,10 +9,14 @@ import StatusIcon from "@/components/StatusIcon.vue"
 
 const utools = window.utools
 
+type TableFunArg = (row: any, index: number) => void
+type TableFunArg2 = (row: any) => void
+
 const createColumns = (
-  { buildJob }: { buildJob: (row: any, index: number) => void },
-  { cancelBuildJob }: { cancelBuildJob: (row: any) => void },
-  { viewLog }: { viewLog: (row: any) => void }
+  { buildJob }: { buildJob: TableFunArg },
+  { cancelBuildJob }: { cancelBuildJob: TableFunArg2 },
+  { viewLog }: { viewLog: TableFunArg2 },
+  { handleJobName }: { handleJobName: TableFunArg2 }
 ) => {
   return [
     {
@@ -31,6 +35,18 @@ const createColumns = (
       key: "name",
       width: 180,
       fixed: "left",
+      render(row: any) {
+          return h(
+              NButton,
+              {
+                  text: true,
+                  tag: 'a',
+                  target: '_blank',
+                  onClick: () =>handleJobName(row),
+              },
+              { default: () => row.name }
+          )
+      },
     },
     {
       title: "构建时间",
@@ -432,6 +448,10 @@ export default defineComponent({
         }, 100)
     }
 
+    const handleJobName = (job: any) => {
+        utools.shellOpenExternal(store.getters.jenkinsUrl + '/job/' + job.name)
+    }
+
     const handleCloseLogModel = () => {
         showLogModal.value = false
     }
@@ -451,11 +471,12 @@ export default defineComponent({
       jobName,
       viewNames,
       filterJobList,
-      columns: createColumns( { buildJob }, { cancelBuildJob }, { viewLog } ),
+      columns: createColumns( { buildJob }, { cancelBuildJob }, { viewLog }, { handleJobName } ),
       handleJKNameValue,
       handleViewNameValue,
       refreshJobsList,
       handleCloseLogModel,
+      handleJobName,
       buildLog,
       jobsList,
       viewNameList,
