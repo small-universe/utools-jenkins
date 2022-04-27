@@ -11,17 +11,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { zhCN, dateZhCN } from 'naive-ui'
-import hljs from 'highlight.js/lib/common'
 import JenkinsView from '@/views/JenkinsView.vue'
-
-hljs.registerLanguage('naive-log', () => ({
-    contains: [
-      {
-        className: 'number',
-        begin: /\d+/
-      }
-    ]
-}))
 
 export default defineComponent({
   components: {
@@ -30,8 +20,7 @@ export default defineComponent({
   setup() {
     return {
       zhCN,
-      dateZhCN,
-      hljs
+      dateZhCN
     }
   }
 })

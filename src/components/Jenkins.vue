@@ -508,23 +508,36 @@ export default defineComponent({
         :close-on-esc="false"
         :mask-closable="false"
         :showIcon="false"
-        style="width: 700px;height:400px;">
+        style="width: 750px;height:450px;">
         <template #header>
             <div>查看日志({{logJobName}})</div>
         </template>
-        <div>
-            <n-log
-                :log="buildLog"
-                :loading="logLoading"
-                language="naive-log"
-                trim
-            />
-        </div>
+        <pre class="console-output" v-html="buildLog"></pre>
     </n-modal>
 </template>
 
 <style scoped>
 .data-table {
   margin-top: 10px;
+}
+pre, code, kbd, samp, tt {
+    font-size: var(--font-size-monospace);
+}
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0 0 var(--section-padding);
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    background-color: var(--pre-background);
+    color: var(--pre-color) !important;
+    font-family: var(--font-family-mono) !important;
+    font-weight: 500 !important;
+    line-height: 1.66 !important;
+}
+.console-output {
+    max-height: 360px;
+    overflow-y: auto;
+    background-color: #f2f2f2;
 }
 </style>
