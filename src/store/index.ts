@@ -1,5 +1,14 @@
 import { createStore } from 'vuex'
-import { jobsList,buildHistory, jobDetails, queueItem,baseInfo,buildJob } from "@/api/jenkins"
+import { 
+  jobsList,
+  buildHistory,
+  jobDetails, 
+  queueItem,
+  baseInfo,
+  buildJob,
+  buildConsole,
+  cancelBuild,
+  cancelQueueItem } from "@/api/jenkins"
 
 const state = {
   config: {},
@@ -81,8 +90,8 @@ const actions = {
         if (!res) {
           reject('获取构建历史失败！')
         }
-        resolve(res.data)
-        context.commit('buildHistoryMuts', res.data)
+        resolve(res)
+        context.commit('buildHistoryMuts', res)
       }).catch(err => {
         reject(err)
       })
@@ -94,8 +103,8 @@ const actions = {
         if (!res) {
           reject('获取任务详情失败！')
         }
-        resolve(res.data)
-        context.commit('jobDetailsMuts', res.data)
+        resolve(res)
+        context.commit('jobDetailsMuts', res)
       }).catch(err => {
         reject(err)
       })
@@ -117,7 +126,42 @@ const actions = {
   buildJobAct(context: any, data: any) {
     return new Promise((resolve, reject) => {
       buildJob(context.state.config, data).then(res => {
-        console.log(res, "--------------------------");
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  buildConsoleAct(context: any, data: any) {
+    return new Promise((resolve, reject) => {
+      buildConsole(context.state.config, data).then(res => {
+        if (!res) {
+          reject('获取日志失败！')
+        }
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  cancelBuildAct(context: any, data: any) {
+    return new Promise((resolve, reject) => {
+      cancelBuild(context.state.config, data).then(res => {
+        if (!res) {
+          reject('取消构建失败！')
+        }
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  cancelQueueItemAct(context: any, itemId: string) {
+    return new Promise((resolve, reject) => {
+      cancelQueueItem(context.state.config, itemId).then(res => {
+        if (!res) {
+          reject('取消队列失败！')
+        }
         resolve(res)
       }).catch(err => {
         reject(err)

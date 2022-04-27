@@ -18,6 +18,7 @@ import {
     NIcon,
     NModal,
     NTime,
+    NLog,
     NConfigProvider,
     NDialogProvider,
     NMessageProvider
@@ -38,6 +39,7 @@ const naive = create({
         NIcon,
         NModal,
         NTime,
+        NLog,
         NConfigProvider,
         NDialogProvider,
         NMessageProvider

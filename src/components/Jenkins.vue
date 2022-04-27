@@ -17,9 +17,7 @@ const createColumns = (
   return [
     {
       title: "状态",
-
-      width: 70,
-      fixed: "left",
+      width: 48,
       render(row: any) {
           return h(StatusIcon, {
               name: row.icon,
@@ -139,6 +137,10 @@ export default defineComponent({
     const store = useStore()
     const message = useMessage()
     const dialog = useDialog()
+    const showLogModal = ref(false)
+    const buildLog = ref("")
+    const logJobName = ref("")
+    const logLoading = ref(false)
     const configList = ref<any>(jenkinsList());
     const jkName = ref(configList?.value[0]?.value || null)
     const jobs = ref<any>([{}])
@@ -159,6 +161,7 @@ export default defineComponent({
             onPositiveClick: () => {
                 store.dispatch("buildJobAct", { jobName: rowData.name }).then((res) => {
                     const job = jobs.value[index]
+                    
                     let location = res.headers.location
                     let regExp = new RegExp('^.*/item/([a-zA-Z0-9]+)/$')
                     let array = regExp.exec(location);
@@ -173,21 +176,89 @@ export default defineComponent({
                     message.success("开始构建")
                 }).catch(err => {
                     console.log(err);
+                     message.error("构建失败")
                 })
             }
         })
     };
 
-    const cancelBuildJob = (rowData: any) => {
-        console.log("取消---------------------------");
+    const cancelBuildJob = (job: any) => {
+        dialog.info({
+            title: "温馨提示",
+            content: "您确定要取消，" + job.name + "任务吗？",
+            positiveText: "确定",
+            onPositiveClick: () => {
+               if (job.curBuildingNumber) {
+                   store.dispatch("cancelBuildAct", { jobName: job.name, num: job.curBuildingNumber}).then(res => {
+                        message.success("取消任务成功")
+                   }).catch(err => {
+                        message.error("取消任务失败")
+                   })
+                } else if (job.curBuildingQueueItemId) {
+                    store.dispatch("cancelQueueItemAct", job.curBuildingQueueItemId).then(res => {
+                        message.success("取消队列成功")
+                    }).catch(err => {
+                        message.error("取消队列失败")
+                    })
+                }
+                
+            }
+        })
     }
 
-    const viewLog = (rowData: any) => {
-      console.log("查看日志-------------------");
+    const viewLog = (job: any) => {
+        buildLog.value = ""
+        // this.currentJob = job
+        logJobName.value = job.name
+        job.fetchedSize = 0
+        showLogModal.value = true
+        logLoading.value = true
+        if (job.buildStatus && (job.buildStatus === 'SUBMIT' || job.buildStatus === 'BUILDING')) {
+            timingGetBuildConsole(job)
+            logLoading.value = false
+        } else {
+            store.dispatch("buildConsoleAct", { jobName: job.name, number: 'lastBuild', start: 0 }).then(res => {
+                buildLog.value = res.data
+                logLoading.value = false
+            }).catch(err => {
+                console.log(err, "viewLog-------------------")
+                if(err.response.status == 404) {
+                    buildLog.value = "暂无日志"
+                }
+                logLoading.value = false
+            })
+        }
     };
 
+    const timingGetBuildConsole = async (job: any) => {
+      if (job.buildStatus === 'FINISH') {
+        return false
+      }
+      if (!job.curBuildingNumber) {
+        job.buildConsoleTask = setTimeout(() => timingGetBuildConsole(job), 5000)
+        return true
+      }
+      try {
+        return await store.dispatch("buildConsoleAct", { jobName: job.name, number: 'lastBuild', start: 0 }).then(res => {
+          if (res.headers['content-length'] === 0) {
+            job.buildConsoleTask = setTimeout(() => timingGetBuildConsole(job), 5000)
+            return true
+          }
+          buildLog.value = buildLog.value + res.data
+          let moreData = res.headers['x-more-data']
+          job.fetchedSize = res.headers['x-text-size']
+          if (moreData && moreData !== false) {
+            job.buildConsoleTask = setTimeout(() => timingGetBuildConsole(job), 3000)
+          }
+        })
+      } catch (e) {
+        return false
+      }
+    }
+
     const setProgress = (job:any) => {
-      let row = document.querySelectorAll('.el-table__fixed .el-table__row > td:nth-child(2)').item(job.index);
+    //   let row = document.querySelectorAll('.el-table__fixed .el-table__row > td:nth-child(2)').item(job.index);
+      let row = document.querySelectorAll('.n-data-table-table .n-data-table-tbody .n-data-table-tr > td:nth-child(2)').item(job.index);
       if (job.buildStatus === 'FINISH') {
         row.removeAttribute('style')
       } else {
@@ -206,7 +277,7 @@ export default defineComponent({
             buildNum:job.curBuildingNumber
           }
           store.dispatch("buildHistoryAct",params).then(res => {
-          let result = res
+          let result = res.data
           if (result.building === false && result.result) {
             job['buildStatus'] = 'FINISH'
             job['buildResult'] =result.result
@@ -279,7 +350,7 @@ export default defineComponent({
         utools.showNotification(job.name + '构建中止！')
       } finally {
         if (!timing) {
-          let data = await store.dispatch("jobDetailsAct", job.name).then(res => res)// this.jenkins.getJob(job.name).then(res => res.data);
+          let data = await store.dispatch("jobDetailsAct", job.name).then(res => res.data)// this.jenkins.getJob(job.name).then(res => res.data);
           job['color'] = data.color
           utils.jobStatusToIcon(job)
           await jobLastBuild(job)
@@ -298,7 +369,8 @@ export default defineComponent({
             buildNum:"lastBuild"
         }
         try {
-            const result = await store.dispatch("buildHistoryAct",params)
+            const res = await store.dispatch("buildHistoryAct",params)
+            const result = res.data
             job.lastBuildTime = result.timestamp;
             if (result.changeSet && result.changeSet.items.length > 0) {
                 let item = result.changeSet.items[result.changeSet.items.length - 1];
@@ -360,6 +432,10 @@ export default defineComponent({
         }, 100)
     }
 
+    const handleCloseLogModel = () => {
+        showLogModal.value = false
+    }
+
     const filterJobList = computed(()=> {
         let filter = jobs.value.filter((e:any) => e?.name?.match(jobName.value));
         for (let i = 0; i < filter.length; i++) {
@@ -379,8 +455,13 @@ export default defineComponent({
       handleJKNameValue,
       handleViewNameValue,
       refreshJobsList,
+      handleCloseLogModel,
+      buildLog,
       jobsList,
-      viewNameList
+      viewNameList,
+      showLogModal,
+      logJobName,
+      logLoading
     };
   },
   beforeMount() {
@@ -419,6 +500,27 @@ export default defineComponent({
     :columns="columns"
     :data="filterJobList"
     class="data-table"/>
+
+    <n-modal v-model:show="showLogModal" 
+        preset="dialog" 
+        title="Dialog" 
+        @close="handleCloseLogModel"
+        :close-on-esc="false"
+        :mask-closable="false"
+        :showIcon="false"
+        style="width: 700px;height:400px;">
+        <template #header>
+            <div>查看日志({{logJobName}})</div>
+        </template>
+        <div>
+            <n-log
+                :log="buildLog"
+                :loading="logLoading"
+                language="naive-log"
+                trim
+            />
+        </div>
+    </n-modal>
 </template>
 
 <style scoped>

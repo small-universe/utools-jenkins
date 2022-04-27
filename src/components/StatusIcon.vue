@@ -49,6 +49,7 @@ export default defineComponent({
 <style scoped>
   .status-icon {
     vertical-align: middle;
+    width: 48px;
   }
   .build-status-icon__wrapper {
       display: inline-block;

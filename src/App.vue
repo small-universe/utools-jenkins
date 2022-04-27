@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :hljs="hljs">
     <n-message-provider>
       <n-dialog-provider>
         <jenkins-view/>
@@ -11,7 +11,17 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { zhCN, dateZhCN } from 'naive-ui'
+import hljs from 'highlight.js/lib/common'
 import JenkinsView from '@/views/JenkinsView.vue'
+
+hljs.registerLanguage('naive-log', () => ({
+    contains: [
+      {
+        className: 'number',
+        begin: /\d+/
+      }
+    ]
+}))
 
 export default defineComponent({
   components: {
@@ -21,11 +31,11 @@ export default defineComponent({
     return {
       zhCN,
       dateZhCN,
+      hljs
     }
   }
 })
 </script>
-
 
 <style>
 #app {
