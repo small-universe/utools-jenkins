@@ -5,6 +5,9 @@
 ## 2. 第二步
 ![获取Token](imgs/2.png)
 
+# 参考插件开发
+参考地址：[https://github.com/J2ephyr/utools-jenkins](https://github.com/J2ephyr/utools-jenkins)
+
 # utools-jenkins
 
 ## Project setup
@@ -21,6 +24,3 @@ npm run serve
 ```
 npm run build
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
