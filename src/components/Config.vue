@@ -3,6 +3,7 @@ import { h, defineComponent,ref,computed } from 'vue'
 import { FormInst, NButton, NIcon, useMessage,useDialog, FormItemRule } from "naive-ui";
 import { Edit,Delete } from '@vicons/carbon'
 import utils from "@/utils/toolsbox"
+import { useStore } from 'vuex'
 
 const utools = window.utools
 
@@ -87,7 +88,7 @@ const initModel = () => {
     return obj
 }
 
-const strRegex = '^((https|http|ftp|rtsp|mms)?://)'
+const strRegex = '^(https|http|ftp|rtsp|mms)?://'
       + '?(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
       + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
       + '|' // 允许IP和DOMAIN（域名）
@@ -147,13 +148,13 @@ export default defineComponent({
 
     },
     setup() {
-
+        const store = useStore()
         const showModalRef = ref(false)
         const formRef = ref<FormInst | null>(null)
         const message = useMessage()
         const dialog = useDialog()
+        const testLoading = ref(false)
         let modelRef = ref(initModel())
-
         let dataList = ref<any>(getConfList())
 
         const addConfigModel = () => {
@@ -239,6 +240,36 @@ export default defineComponent({
             modelRef.value = initModel()
         }
 
+        const handleTestConnect = () => {
+            testLoading.value = true
+            formRef.value?.validate((errors) => {
+                if (!errors) {
+                     const config: any = {
+                       url: modelRef.value.url,
+                       username: modelRef.value.username,
+                       token: modelRef.value.token
+                    }
+
+                    store.dispatch("baseInfoAct", config).then(res => {
+                        testLoading.value = false
+                        if(res._class === "hudson.model.Hudson") {
+                            message.success("成功")
+                        } else {
+                            message.error("无法连接！")
+                        }
+                    }).catch(err => {
+                        testLoading.value = false
+                        message.error("无法连接！")
+                    })
+                } else {
+                    console.log(errors)
+                    testLoading.value = false
+                    message.error("验证失败")
+                }
+            })
+            
+        }
+
         return {
             formRef,
             showEditModal: showModalRef,
@@ -249,7 +280,9 @@ export default defineComponent({
             model: modelRef,
             rules,
             size: ref('medium'),
-            handleCloseModel
+            handleCloseModel,
+            handleTestConnect,
+            testLoading
         }
     },
 })
@@ -304,6 +337,7 @@ export default defineComponent({
         </div>
         <template #action>
             <div style="height: 50px;"></div>
+            <n-button :loading="testLoading" @click="handleTestConnect">测试</n-button>
             <n-button type="primary" @click="handleSaveConfig">保存</n-button>
         </template>
     </n-modal>

@@ -414,7 +414,11 @@ export default defineComponent({
 
             setTimeout(() => {
                 jobs.value = js
+                store.dispatch("listLoadingAct", false)
             }, 300)
+        }).catch(err => {
+          store.dispatch("listLoadingAct", false)
+          message.warning("加载列表失败！")
         })
     }
 
@@ -464,6 +468,10 @@ export default defineComponent({
         return filter;
     })
 
+    const showLoading = computed(() => {
+      return store.getters.listLoading
+    })
+
     return {
       configList,
       jkName,
@@ -482,13 +490,17 @@ export default defineComponent({
       viewNameList,
       showLogModal,
       logJobName,
-      logLoading
+      logLoading,
+      showLoading
     };
   },
   beforeMount() {
-    console.log("beforeMount----------------------");
-    this.viewNameList()
-    this.jobsList("all")
+
+    if(!this.$store.getters.listLoading) {
+      this.$store.dispatch("listLoadingAct", true)
+      this.viewNameList()
+      this.jobsList("all")
+    }
   },
   mounted() {
     console.log("mounted----------------------");
@@ -497,30 +509,31 @@ export default defineComponent({
 </script>
 
 <template>
-  <n-grid x-gap="12" :cols="4">
-    <n-gi>
-      <n-select
-        v-model:value="jkName"
-        :options="configList" 
-        @update:value="handleJKNameValue"/>
-    </n-gi>
-    <n-gi>
-      <n-select 
-        v-model:value="viewName" 
-        :options="viewNames" 
-        @update:value="handleViewNameValue"/>
-    </n-gi>
-    <n-gi>
-      <n-input v-model:value="jobName" type="text" placeholder="任务名称" />
-    </n-gi>
-    <n-gi>
-      <n-button type="success" @click="refreshJobsList">刷新列表</n-button>
-    </n-gi>
-  </n-grid>
-  <n-data-table
-    :columns="columns"
-    :data="filterJobList"
-    class="data-table"/>
+      <n-grid x-gap="12" :cols="4">
+        <n-gi>
+          <n-select
+            v-model:value="jkName"
+            :options="configList" 
+            @update:value="handleJKNameValue"/>
+        </n-gi>
+        <n-gi>
+          <n-select 
+            v-model:value="viewName" 
+            :options="viewNames" 
+            @update:value="handleViewNameValue"/>
+        </n-gi>
+        <n-gi>
+          <n-input v-model:value="jobName" type="text" placeholder="任务名称" />
+        </n-gi>
+        <n-gi>
+          <n-button type="success" @click="refreshJobsList">刷新列表</n-button>
+        </n-gi>
+      </n-grid>
+      <n-data-table
+        :loading="showLoading"
+        :columns="columns"
+        :data="filterJobList"
+        class="data-table"/>
 
     <n-modal v-model:show="showLogModal" 
         preset="dialog" 
@@ -533,7 +546,15 @@ export default defineComponent({
         <template #header>
             <div>查看日志({{logJobName}})</div>
         </template>
-        <pre class="console-output" v-html="buildLog"></pre>
+        <n-space vertical>
+          <n-spin :show="logLoading">
+            <pre class="console-output" v-html="buildLog"></pre>
+            <template #description>
+              加载日志。。。
+            </template>
+          </n-spin>
+        </n-space>
+        
     </n-modal>
 </template>
 

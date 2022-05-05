@@ -14,6 +14,7 @@ const state = {
   config: {},
   baseInfo: {},
   jobs: [],
+  listLoading: false,
   buildHistorys: [],
   jobDetails: {},
   queueItem: {}
@@ -22,12 +23,19 @@ const state = {
 const getters = {
   jenkinsUrl: (state: any) => {
     return state.config.url
+  },
+  listLoading: (state: any) => {
+    return state.listLoading
   }
 }
 
 const mutations = {
   configMuts(state:any, config:any) {
     state.config = config
+  },
+
+  listLoadingMuts(state: any, listLoading: false) {
+    state.listLoading = listLoading
   },
 
   baseInfoMuts(state: any, { data }:{ data: any}) {
@@ -56,11 +64,16 @@ const actions = {
     context.commit("configMuts", config)
   },
 
-  baseInfoAct(context: any) {
+  listLoadingAct(context: any, listLoading: boolean) {
+    context.commit("listLoadingMuts", listLoading)
+  },
+
+  baseInfoAct(context: any, config: any) {
     return new Promise((resolve, reject) => {
-      baseInfo(context.state.config).then(res => {
+      baseInfo(config || context.state.config).then(res => {
         if (!res) {
           reject('获取基本信息失败！')
+          return
         }
         resolve(res.data)
         context.commit('baseInfoMuts', res.data)
@@ -76,6 +89,7 @@ const actions = {
 
       if(!jobs || jobs.length > 0) {
         reject("获取任务列表失败！")
+        return
       }
       // for (let job of jobs.jobs) {
       //   job.lastBuildTime = 'N/A';
@@ -93,6 +107,7 @@ const actions = {
       buildHistory(context.state.config, data).then(res => {
         if (!res) {
           reject('获取构建历史失败！')
+          return
         }
         resolve(res)
         context.commit('buildHistoryMuts', res)
@@ -106,6 +121,7 @@ const actions = {
       jobDetails(context.state.config, jobName).then(res => {
         if (!res) {
           reject('获取任务详情失败！')
+          return
         }
         resolve(res)
         context.commit('jobDetailsMuts', res)
@@ -119,6 +135,7 @@ const actions = {
       queueItem(context.state.config, itemId).then(res => {
         if (!res) {
           reject('获取任队列信息失败！')
+          return
         }
         resolve(res.data)
         context.commit('queueItemMuts', res.data)
@@ -141,6 +158,7 @@ const actions = {
       buildConsole(context.state.config, data).then(res => {
         if (!res) {
           reject('获取日志失败！')
+          return
         }
         resolve(res)
       }).catch(err => {
@@ -153,6 +171,7 @@ const actions = {
       cancelBuild(context.state.config, data).then(res => {
         if (!res) {
           reject('取消构建失败！')
+          return
         }
         resolve(res)
       }).catch(err => {
@@ -165,6 +184,7 @@ const actions = {
       cancelQueueItem(context.state.config, itemId).then(res => {
         if (!res) {
           reject('取消队列失败！')
+          return
         }
         resolve(res)
       }).catch(err => {

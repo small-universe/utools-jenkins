@@ -10,20 +10,32 @@ export const baseInfo = (config: any) => {
    * @returns {*}
    */
 export const jobsList = async (config:any, viewName: string) => {
-    const resp: any = await axiosConfig(config).get((viewName ? "/view/" + viewName : "") + "/api/json")
-    const res = resp.data
-
-    for (let i = 0; i < res.jobs.length; i++) {
-        let job = res.jobs[i]
-        if (job._class === 'com.cloudbees.hudson.plugins.folder.Folder') {
-            let jobs = await jobsListOfFolder(config,encodeURI(job.name))
-            if (jobs && jobs.length !== 0) {
-                res.jobs = res.jobs.concat(jobs)
-            }
-            res.data.jobs.splice(i, 1)
+    try {
+        const resp: any = await axiosConfig(config).get((viewName ? "/view/" + viewName : "") + "/api/json")
+        console.log(resp, "==========================")
+        const res = resp.data
+    
+        if(!res.jobs) {
+            return null
         }
+    
+        for (let i = 0; i < res.jobs.length; i++) {
+            let job = res.jobs[i]
+            if (job._class === 'com.cloudbees.hudson.plugins.folder.Folder') {
+                let jobs = await jobsListOfFolder(config,encodeURI(job.name))
+                if (jobs && jobs.length !== 0) {
+                    res.jobs = res.jobs.concat(jobs)
+                }
+                res.data.jobs.splice(i, 1)
+            }
+        }
+        return res
+    } catch(err) {
+        console.log(err, "err-----------------------------------");
+        
+        return null
     }
-    return res
+    
 }
 
 export const jobsListOfFolder = (config:any,folderPath:string) => {
