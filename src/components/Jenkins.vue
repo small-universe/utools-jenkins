@@ -438,6 +438,9 @@ export default defineComponent({
 
     const handleJKNameValue = (value: string, option: SelectOption) => {
         store.dispatch("configAct",option.data)
+        store.dispatch("listLoadingAct", true)
+        viewNameList()
+        viewName.value = "all"
         jobsList(viewName.value)
     }
 
