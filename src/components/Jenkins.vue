@@ -2,7 +2,7 @@
 import { NButton, NIcon,NTime,SelectOption, useMessage, useDialog } from "naive-ui";
 import { Construct as ConstructIcon, CloseCircleOutline } from "@vicons/ionicons5";
 import { ChangeCatalog } from "@vicons/carbon";
-import { h, defineComponent, ref, computed } from "vue";
+import { h, defineComponent, ref, computed, nextTick, watch } from "vue";
 import { useStore } from 'vuex'
 import utils from "@/utils/toolsbox";
 import StatusIcon from "@/components/StatusIcon.vue"
@@ -411,7 +411,6 @@ export default defineComponent({
                 utils.jobStatusToIcon(job)
                 jobLastBuild(job)
             }
-
             setTimeout(() => {
                 jobs.value = js
                 store.dispatch("listLoadingAct", false)
@@ -463,6 +462,13 @@ export default defineComponent({
         showLogModal.value = false
     }
 
+    watch(buildLog, () => {
+        nextTick(() => {
+          const logView = document.getElementById('logView')
+          logView!.scrollTop = logView!.scrollHeight
+        })
+    })
+
     const filterJobList = computed(()=> {
         let filter = jobs.value.filter((e:any) => e?.name?.match(jobName.value));
         for (let i = 0; i < filter.length; i++) {
@@ -507,7 +513,7 @@ export default defineComponent({
   },
   mounted() {
     console.log("mounted----------------------");
-  },
+  }
 });
 </script>
 
@@ -551,7 +557,7 @@ export default defineComponent({
         </template>
         <n-space vertical>
           <n-spin :show="logLoading">
-            <pre class="console-output" v-html="buildLog"></pre>
+            <pre id="logView" class="console-output" v-html="buildLog"></pre>
             <template #description>
               加载日志。。。
             </template>
