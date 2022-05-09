@@ -58,7 +58,7 @@ const createColumns = (
         } else {
             return h(NTime, {
                 time: row.lastBuildTime,
-                format: 'yyyy-MM-dd hh:mm:ss'
+                format: 'yyyy-MM-dd HH:mm:ss'
             })
         }
       }
