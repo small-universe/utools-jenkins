@@ -22,6 +22,7 @@ import {
     NSpin,
     NSwitch,
     NTooltip,
+    NPopover,
     NConfigProvider,
     NDialogProvider,
     NMessageProvider
@@ -46,6 +47,7 @@ const naive = create({
         NSpin,
         NSwitch,
         NTooltip,
+        NPopover,
         NConfigProvider,
         NDialogProvider,
         NMessageProvider

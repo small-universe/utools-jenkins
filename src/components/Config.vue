@@ -1,7 +1,7 @@
 <script lang="ts">
 import { h, defineComponent,ref,computed } from 'vue'
 import { FormInst, NButton, NIcon, useMessage,useDialog, FormItemRule } from "naive-ui";
-import { Edit,Delete } from '@vicons/carbon'
+import { Edit, Delete, HelpFilled } from '@vicons/carbon'
 import utils from "@/utils/toolsbox"
 import { useStore } from 'vuex'
 
@@ -144,6 +144,7 @@ function getConfList() {
 
 export default defineComponent({
     name: "Config",
+    components: { HelpFilled },
     computed: {
 
     },
@@ -330,7 +331,24 @@ export default defineComponent({
                 <n-form-item label="用户名" path="username">
                     <n-input v-model:value="model.username" placeholder="用户名" />
                 </n-form-item>
-                <n-form-item label="Token" path="token">
+                <n-form-item path="token">
+                    <template #label>
+                     Token 
+                     <n-popover trigger="hover">
+                      <template #trigger>
+                        <n-icon size="15" color="#a19f9d">
+                          <help-filled />
+                        </n-icon>
+                      </template>
+                      <div class="token-help">
+                        <h3>如何获取Token: </h3>
+                        <h4>第一步: </h4>
+                        <img width="420" src="@/assets/1.png"/>
+                        <h4>第二步: </h4>
+                        <img width="420" src="@/assets/2.png"/>
+                      </div>
+                    </n-popover>
+                  </template>
                     <n-input v-model:value="model.token" type="password" show-password-on="mousedown" placeholder="令牌"/>
                 </n-form-item>
             </n-form>
@@ -347,5 +365,9 @@ export default defineComponent({
     .btn-wapper {
         margin-bottom: 10px;
         text-align: right;
+    }
+    .token-help {
+        max-height: 200px;
+        overflow-y: auto;
     }
 </style>
