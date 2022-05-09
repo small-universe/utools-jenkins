@@ -8,7 +8,9 @@ import {
   buildJob,
   buildConsole,
   cancelBuild,
-  cancelQueueItem } from "@/api/jenkins"
+  cancelQueueItem,
+  getJob,
+  handleGitParameter } from "@/api/jenkins"
 
 const state = {
   config: {},
@@ -190,6 +192,25 @@ const actions = {
       }).catch(err => {
         reject(err)
       })
+    })
+  },
+  getJobAct(context: any, jobName: string) {
+    return new Promise((resolve, reject) => {
+      getJob(context.state.config, jobName).then(res => {
+        if (!res) {
+          reject('获取任务失败！')
+          return
+        }
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  handleGitParameterAct(context: any, data: any) {
+    return new Promise(async(resolve, reject) => {
+      await handleGitParameter(context.state.config, data);
+      resolve("成功")
     })
   }
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { NButton, NIcon,NTime,SelectOption, useMessage, useDialog } from "naive-ui";
 import { Construct as ConstructIcon, CloseCircleOutline } from "@vicons/ionicons5";
-import { ChangeCatalog } from "@vicons/carbon";
+import { ChangeCatalog,HelpFilled } from "@vicons/carbon";
 import { h, defineComponent, ref, computed, nextTick, watch } from "vue";
 import { useStore } from 'vuex'
 import utils from "@/utils/toolsbox";
@@ -13,7 +13,7 @@ type TableFunArg = (row: any, index: number) => void
 type TableFunArg2 = (row: any) => void
 
 const createColumns = (
-  { buildJob }: { buildJob: TableFunArg },
+  { buildJobParamsDialog }: { buildJobParamsDialog: TableFunArg },
   { cancelBuildJob }: { cancelBuildJob: TableFunArg2 },
   { viewLog }: { viewLog: TableFunArg2 },
   { handleJobName }: { handleJobName: TableFunArg2 }
@@ -96,7 +96,7 @@ const createColumns = (
                 circle: true,
                 type: "success",
                 title: "构建",
-                onClick: () => buildJob(row, index),
+                onClick: () => buildJobParamsDialog(row, index),
                 },
                 {
                 icon: () =>
@@ -148,12 +148,16 @@ const jenkinsList = () => {
 
 export default defineComponent({
   name: "Jenkins",
-  components: { StatusIcon },
+  components: { StatusIcon, HelpFilled },
   setup() {
     const store = useStore()
     const message = useMessage()
     const dialog = useDialog()
+    const showbuildParamsModal = ref(false)
+    const buildParamsLoading = ref(false)
     const showLogModal = ref(false)
+    const currentBuildJob = ref<any>({})
+    const jobParameterTypeOfSelectNoChoice = ref(["PT_MULTI_SELECT", "PT_SINGLE_SELECT", "PT_TAG", "PT_BRANCH", "PT_BRANCH_TAG", "PT_REVISION", "PT_PULL_REQUEST"])
     const buildLog = ref("")
     const logJobName = ref("")
     const logLoading = ref(false)
@@ -167,36 +171,62 @@ export default defineComponent({
     
     store.dispatch("configAct",configList?.value[0]?.data)
 
-    const buildJob = (rowData: any, index: number) => {
-        console.log("构建-----------------");
-        dialog.info({
-            title: "温馨提示",
-            content: "您是否构建，" + rowData.name + "任务？",
-            positiveText: "开始构建",
-            showIcon: false,
-            onPositiveClick: () => {
-                store.dispatch("buildJobAct", { jobName: rowData.name }).then((res) => {
-                    const job = jobs.value[index]
-                    
-                    let location = res.headers.location
-                    let regExp = new RegExp('^.*/item/([a-zA-Z0-9]+)/$')
-                    let array = regExp.exec(location);
-                    if (array!.length >= 2) {
-                        job.curBuildingQueueItemId = array![1]
-                    }
-                    if (job.curBuildingNumber) {
-                        delete job.curBuildingNumber
-                    }
-                    job['buildStatus'] = 'SUBMIT'
-                    timingGetBuildProgress(job)
-                    message.success("开始构建")
-                }).catch(err => {
-                    console.log(err);
-                     message.error("构建失败")
-                })
+    const buildJobParamsDialog = async (job: any, index: number) => {
+        buildParamsLoading.value = true
+        if (!job.form) {
+          job.form = {}
+        }
+        try {
+          // const job = {}
+          const data = await store.dispatch("getJobAct",job.name).then(res => res.data);
+          job.property = data.property
+          job.description = data.description
+          job.displayName = data.displayName
+          job.parameterProcessed = []
+          if (job.property && job.property.length > 0) {
+          for (let property of job.property) {
+            if (!property || !property.parameterDefinitions || property.parameterDefinitions.length === 0) {
+              continue
             }
-        })
+            for (let param of property.parameterDefinitions) {
+              job.form[param.name] = param.defaultParameterValue ? param.defaultParameterValue.value : '';
+              await store.dispatch("handleGitParameterAct", {job: job, param: param });
+              job.parameterProcessed.push(param)
+            }
+          }
+        }
+
+        } finally {
+          buildParamsLoading.value = false
+        }
+
+        showbuildParamsModal.value = true
+        currentBuildJob.value = job
     };
+
+    const startBuildJob = () => {
+      store.dispatch("buildJobAct", { jobName: currentBuildJob.value.name,parameters: currentBuildJob.value.form }).then((res) => {
+          const job = currentBuildJob.value
+          
+          let location = res.headers.location
+          let regExp = new RegExp('^.*/item/([a-zA-Z0-9]+)/$')
+          let array = regExp.exec(location);
+          if (array!.length >= 2) {
+              job.curBuildingQueueItemId = array![1]
+          }
+          if (job.curBuildingNumber) {
+              delete job.curBuildingNumber
+          }
+          job['buildStatus'] = 'SUBMIT'
+          timingGetBuildProgress(job)
+          message.success("开始构建")
+          showbuildParamsModal.value = false
+      }).catch(err => {
+          console.log(err);
+          message.error("构建失败")
+          showbuildParamsModal.value = false
+      })
+    }
 
     const cancelBuildJob = (job: any) => {
         dialog.info({
@@ -481,14 +511,49 @@ export default defineComponent({
       return store.getters.listLoading
     })
 
+    const paramsSelectOptions = computed(() => {
+      const options:any = []
+      if(currentBuildJob.value && currentBuildJob.value.parameterProcessed && currentBuildJob.value.parameterProcessed.length > 0) {
+        for (const key in currentBuildJob.value.parameterProcessed) {
+          const params = currentBuildJob.value.parameterProcessed[key]
+          if(jobParameterTypeOfSelectNoChoice.value.indexOf(params.type) !== -1) {
+            for(const k1 in params.choices){
+              options.push({
+                label: params.choices[k1].text,
+                value: params.choices[k1].value
+              })
+            }
+          } else {
+            for(const k2 in params.choices){
+              options.push({
+                label: params.choices[k2],
+                value: params.choices[k2]
+              })
+            }
+          }
+        }
+      }
+      return options
+    })
+
     return {
+      jobParameterTypeOfSeparator: ref(["ParameterSeparatorDefinition"]),
+      jobParameterTypeOfFile: ref(["FileParameterDefinition", "PatchParameterDefinition"]),
+      jobParameterTypeOfTextArea: ref(["TextParameterDefinition", "PersistentTextParameterDefinition"]),
+      jobParameterTypeOfCheckbox: ref(["BooleanParameterDefinition", "PersistentBooleanParameterDefinition", ""]),
+      jobParameterTypeOfInput: ref(["StringParameterDefinition", "DateParameterDefinition",
+        "LabelParameterDefinition", "PersistentStringParameterDefinition","PasswordParameterDefinition", "PT_TEXTBOX"]),
+      jobParameterTypeOfSelect: ref(["ChoiceParameterDefinition", "CascadeChoiceParameter", "BooleanParameterDefinition",
+        "NodeParameterDefinition", "PersistentChoiceParameterDefinition",
+        "PT_MULTI_SELECT", "PT_SINGLE_SELECT", "PT_TAG", "PT_BRANCH", "PT_BRANCH_TAG", "PT_REVISION", "PT_PULL_REQUEST"]),
+      jobParameterTypeOfSelectNoChoice,
       configList,
       jkName,
       viewName,
       jobName,
       viewNames,
       filterJobList,
-      columns: createColumns( { buildJob }, { cancelBuildJob }, { viewLog }, { handleJobName } ),
+      columns: createColumns( { buildJobParamsDialog }, { cancelBuildJob }, { viewLog }, { handleJobName } ),
       handleJKNameValue,
       handleViewNameValue,
       refreshJobsList,
@@ -497,6 +562,11 @@ export default defineComponent({
       buildLog,
       jobsList,
       viewNameList,
+      showbuildParamsModal,
+      buildParamsLoading,
+      currentBuildJob,
+      startBuildJob,
+      paramsSelectOptions,
       showLogModal,
       logJobName,
       logLoading,
@@ -544,6 +614,59 @@ export default defineComponent({
         :data="filterJobList"
         class="data-table"/>
 
+    <!-- 获取构建参数弹出框 -->
+    <n-modal v-model:show="showbuildParamsModal" 
+        preset="dialog" 
+        title="Dialog" 
+        :close-on-esc="false"
+        :mask-closable="false"
+        :showIcon="false">
+        <template #header>
+            <div>构建({{currentBuildJob.name}})</div>
+        </template>
+        <n-space vertical>
+          <n-spin :show="buildParamsLoading">
+            <n-form-item label="描述" v-if="currentBuildJob.description">
+              <label style="color: #a19f9d;">{{ currentBuildJob.description }}</label>
+            </n-form-item>
+            <n-form ref="buildJobRef" :model="currentBuildJob" v-if="currentBuildJob.parameterProcessed">
+              <template v-for="params in currentBuildJob.parameterProcessed" v-bind:key="params.name">
+                <n-form-item>
+                  <template #label>
+                     {{params.name}}&nbsp;
+                     <n-tooltip trigger="hover" v-if="params.description">
+                      <template #trigger>
+                        <n-icon size="20" color="#a19f9d">
+                          <help-filled />
+                        </n-icon>
+                      </template>
+                      {{ params.description }}
+                    </n-tooltip>
+                  </template>
+                  <n-input v-if="jobParameterTypeOfInput.indexOf(params.type) !== -1" 
+                    :type="params.type === 'PasswordParameterDefinition' ? 'password' : 'text'"
+                    v-model:value="currentBuildJob.form[params.name]"/>
+                  <n-input v-else-if="jobParameterTypeOfTextArea.indexOf(params.type) !== -1" type="textarea"
+                    v-model:value="currentBuildJob.form[params.name]"/>
+                  <n-select v-else-if="jobParameterTypeOfSelect.indexOf(params.type) !== -1 && params.choices && params.choices.length !== 0"
+                    v-model:value="currentBuildJob.form[params.name]" :multiple="params.type === 'PT_MULTI_SELECT'" :options="paramsSelectOptions" />
+                  <n-switch v-else-if="jobParameterTypeOfCheckbox.indexOf(params.type) !== -1"
+                     v-model:value="currentBuildJob.form[params.name]"/>
+                  <label v-else>不支持的参数类型：{{ params.type }}</label>
+                </n-form-item>
+              </template>
+            </n-form>
+            <template #description>
+              加载构建参数。。。
+            </template>
+          </n-spin>
+        </n-space>
+        <template #action>
+            <div style="height: 50px;"></div>
+            <n-button type="primary" @click="startBuildJob">开始构建</n-button>
+        </template>
+    </n-modal>
+    <!-- 日志弹出框 -->
     <n-modal v-model:show="showLogModal" 
         preset="dialog" 
         title="Dialog" 

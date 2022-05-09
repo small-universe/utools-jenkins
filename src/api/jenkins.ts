@@ -1,4 +1,5 @@
 import axiosConfig  from "@/utils/axios"
+import utils from "@/utils/toolsbox"
 
 export const baseInfo = (config: any) => {
     return axiosConfig(config).get("/api/json")
@@ -81,7 +82,7 @@ jobName:string, parameters: any
 */
 export const buildJob = (config:any, data: any) => {
     let url
-    if (data.parameters && data.parameters.length !== 0) {
+    if (data.parameters && utils.checkNullObj(data.parameters)) {
         url = "/job/" + data.jobName + "/buildWithParameters"
     } else {
         url = "/job/" + data.jobName + "/build"
@@ -125,3 +126,46 @@ export const cancelQueueItem = (config:any, itemId:string) => {
         params: {id: itemId}
     })
 }
+
+  /**
+   * 获取任务详情
+   * @param jobName
+   * @returns {*}
+   */
+export const getJob = (config:any, jobName: string) => {
+    return axiosConfig(config).get('/job/' + jobName + '/api/json')
+}
+
+/**
+   * 获取git参数
+   * @param jobName
+   * @param paramName
+   * @returns {*|void}
+   */
+ const getBuildGitParameter = (config:any, data: any) => {
+    let headers = {}
+    return axiosConfig(config).post("/job/" + data.jobName + '/descriptorByName/net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition/fillValueItems?param=' + data.paramName, {}, {
+      headers: headers
+    })
+  }
+
+  /**
+   * 处理git参数
+   * @param job
+   * @param param
+   * @returns {Promise<void>}
+   */
+  export const handleGitParameter = async (config:any, data: any) => {
+    if (data.param._class === 'net.uaznia.lukanus.hudson.plugins.gitparameter.GitParameterDefinition') {
+      let result = await getBuildGitParameter(data.job.name, data.param.name).then(res => res.data);
+      console.log('git parameter', result)
+      let choices = []
+      let options = result ? result.values : []
+      if (options.length !== 0) {
+        for (let i = 0; i < options.length; i++) {
+          choices.push({text: options[i].name, value: options[i].value})
+        }
+      }
+      data.param.choices = choices
+    }
+  }

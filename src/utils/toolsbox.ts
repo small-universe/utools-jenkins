@@ -115,6 +115,12 @@ let utils = {
       return array![1]
     }
     return ''
+  },
+  checkNullObj: function(obj: any) {
+    if(Object.keys(obj).length === 0) {
+      return false
+    }
+    return true
   }
 }
 
