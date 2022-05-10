@@ -433,18 +433,18 @@ export default defineComponent({
     }
 
     const jobsList = (viewName: string) => {
-        store.dispatch("jobsAct",viewName).then(res => {
+        store.dispatch("jobsAct",viewName).then(async res => {
             
-            const js = res.jobs
-            for (let job of js) {
+            const jobsList = res.jobs
+            for (let job of jobsList) {
                 job.lastBuildTime = 'N/A';
                 utils.jobStatusToIcon(job)
-                jobLastBuild(job)
+                await jobLastBuild(job)
             }
-            setTimeout(() => {
-                jobs.value = js
-                store.dispatch("listLoadingAct", false)
-            }, 300)
+
+            jobs.value = jobsList
+            store.dispatch("listLoadingAct", false)
+            
         }).catch(err => {
           store.dispatch("listLoadingAct", false)
           message.warning("加载列表失败！")
