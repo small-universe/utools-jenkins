@@ -1,10 +1,12 @@
 <script lang="ts">
-import { NButton, NIcon, NTime, SelectOption, useMessage, useDialog, 
+import {
+  NButton, NIcon, NTime, SelectOption, useMessage, useDialog,
   NBreadcrumb, NBreadcrumbItem
 } from "naive-ui";
-import { Construct as ConstructIcon, CloseCircleOutline, Home, 
+import {
+  Construct as ConstructIcon, CloseCircleOutline, Home,
   CaretForwardOutline, RefreshSharp
- } from "@vicons/ionicons5";
+} from "@vicons/ionicons5";
 import { ChangeCatalog, HelpFilled } from "@vicons/carbon";
 import { h, defineComponent, ref, computed, nextTick, watch } from "vue";
 import { useStore } from 'vuex'
@@ -12,6 +14,7 @@ import utils from "@/utils/toolsbox";
 import StatusIcon from "@/components/status-icon/index.vue"
 import { JenkinsClassTypeEnum } from "./model";
 import { buildJob } from "@/api/jenkins";
+import { whileStatement } from "@babel/types";
 
 const utools = window.utools
 
@@ -28,8 +31,8 @@ const createColumns = (
 ) => {
   return [
     {
-      title: "状态",
-      width: 80,
+      title: '状态',
+      width: 90,
       render(row: any) {
         return h(StatusIcon, {
           name: row.icon,
@@ -45,31 +48,29 @@ const createColumns = (
       }
     },
     {
-      title: "名称",
-      key: "displayName",
+      title: '名称',
+      key: 'displayName',
       width: 160,
-      fixed: "left",
+      fixed: 'left',
       render(row: any) {
-        return h(
-          NButton,
+        return h('a',
           {
-            text: true,
-            tag: 'a',
+            text: row.name,
+            href: "",
             target: '_blank',
             onClick: () => handleJobName(row),
-          },
-          { default: () => row.name }
+          }
         )
       },
     },
     {
-      title: "最近构建时间",
-      key: "lastBuildTime",
-      width: 120,
+      title: '最近构建时间',
+      key: 'lastBuildTime',
+      width: 150,
       render(row: any) {
         // getJobLastBuild(row)
-        if (!(row.lastBuildTime) || row.lastBuildTime === "N/A") {
-          return h('span', ["N/A"])
+        if (!(row.lastBuildTime) || row.lastBuildTime === 'N/A') {
+          return h('span', ['N/A'])
         } else {
           return h(NTime, {
             time: row.lastBuildTime,
@@ -79,8 +80,8 @@ const createColumns = (
       }
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       width: 150,
       render(row: any, index: number) {
         const ops = [];
@@ -91,8 +92,8 @@ const createColumns = (
               strong: true,
               secondary: true,
               circle: true,
-              type: "success",
-              title: "取消",
+              type: 'success',
+              title: '取消',
               onClick: () => cancelBuildJob(row),
             },
             {
@@ -109,8 +110,8 @@ const createColumns = (
               strong: true,
               secondary: true,
               circle: true,
-              type: "success",
-              title: "构建",
+              type: 'success',
+              title: '构建',
               disabled: row._class === JenkinsClassTypeEnum.WORKFLOW_MULTI_BRANCH_PROJECT,
               onClick: () => buildJobParamsDialog(row, index),
             },
@@ -129,11 +130,11 @@ const createColumns = (
             strong: true,
             secondary: true,
             circle: true,
-            type: "success",
-            title: "查看日志",
+            type: 'success',
+            title: '查看日志',
             disabled: row._class === JenkinsClassTypeEnum.WORKFLOW_MULTI_BRANCH_PROJECT,
             style: {
-              marginLeft: "10px",
+              marginLeft: '10px',
             },
             onClick: () => showLog(row),
           },
@@ -164,7 +165,7 @@ const jenkinsList = () => {
 }
 
 export default defineComponent({
-  name: "Jenkins",
+  name: 'Jenkins',
   components: { StatusIcon, HelpFilled, Home, CaretForwardOutline, RefreshSharp },
   setup() {
     const store = useStore()
@@ -174,19 +175,19 @@ export default defineComponent({
     const buildParamsLoading = ref<boolean>(false)
     const showLogModal = ref<boolean>(false)
     const currentBuildJob = ref<any>({})
-    const jobParameterTypeOfSelectNoChoice = ref(["PT_MULTI_SELECT", "PT_SINGLE_SELECT", "PT_TAG", "PT_BRANCH", "PT_BRANCH_TAG", "PT_REVISION", "PT_PULL_REQUEST"])
-    const buildLog = ref<string>("")
-    const logJobName = ref<string>("")
+    const jobParameterTypeOfSelectNoChoice = ref(['PT_MULTI_SELECT', 'PT_SINGLE_SELECT', 'PT_TAG', 'PT_BRANCH', 'PT_BRANCH_TAG', 'PT_REVISION', 'PT_PULL_REQUEST'])
+    const buildLog = ref<string>('')
+    const logJobName = ref<string>('')
     const logLoading = ref<boolean>(false)
     const configList = ref<any>(jenkinsList());
     const jkName = ref(configList?.value[0]?.value || null)
     const jobs = ref<any>([{}])
-    const jobName = ref("")
+    const jobName = ref('')
     const viewNames = ref<any>([{}])
-    const viewName = ref("所有")
-    const breadCrumb = ref<any>({ "view": { "name": "all", "displayName": "所有" }, "workflow": null, "job": null })
+    const viewName = ref('所有')
+    const breadCrumb = ref<any>({ 'view': { 'name': 'all', 'displayName': '所有' }, 'workflow': null, 'job': null })
 
-    store.dispatch("configAct", configList?.value[0]?.data)
+    store.dispatch('configAct', configList?.value[0]?.data)
 
     const buildJobParamsDialog = async (job: any, index: number) => {
       buildParamsLoading.value = true
@@ -195,7 +196,7 @@ export default defineComponent({
       }
       try {
         // const job = {}
-        const data = await store.dispatch("getJobAct", job.fullName).then(res => res.data);
+        const data = await store.dispatch('getJobAct', job.fullName).then(res => res.data);
         job.property = data.property
         job.description = data.description
         job.displayName = data.displayName
@@ -207,7 +208,7 @@ export default defineComponent({
             }
             for (let param of property.parameterDefinitions) {
               job.form[param.name] = param.defaultParameterValue ? param.defaultParameterValue.value : '';
-              await store.dispatch("handleGitParameterAct", { job: job, param: param });
+              await store.dispatch('handleGitParameterAct', { job: job, param: param });
               job.parameterProcessed.push(param)
             }
           }
@@ -222,7 +223,7 @@ export default defineComponent({
     };
 
     const startBuildJob = () => {
-      store.dispatch("buildJobAct", { jobName: currentBuildJob.value.fullName, parameters: currentBuildJob.value.form }).then((res) => {
+      store.dispatch('buildJobAct', { jobName: currentBuildJob.value.fullName, parameters: currentBuildJob.value.form }).then((res) => {
         const job = currentBuildJob.value
 
         let location = res.headers.location
@@ -236,7 +237,7 @@ export default defineComponent({
         }
         job['buildStatus'] = 'SUBMIT'
         timingGetBuildProgress(job)
-        message.success("开始构建")
+        message.success('开始构建')
         showbuildParamsModal.value = false
       }).catch(err => {
         message.error(`构建失败 fail reason ==> ${err}`)
@@ -246,21 +247,21 @@ export default defineComponent({
 
     const cancelBuildJob = (job: any) => {
       dialog.info({
-        title: "温馨提示",
-        content: "您确定要取消，" + job.name + "任务吗？",
-        positiveText: "确定",
+        title: '温馨提示',
+        content: '您确定要取消，' + job.name + '任务吗？',
+        positiveText: '确定',
         onPositiveClick: () => {
           if (job.curBuildingNumber) {
-            store.dispatch("cancelBuildAct", { jobName: job.fullName, num: job.curBuildingNumber }).then(res => {
-              message.success("取消任务成功")
+            store.dispatch('cancelBuildAct', { jobName: job.fullName, num: job.curBuildingNumber }).then(res => {
+              message.success('取消任务成功')
             }).catch(err => {
-              message.error("取消任务失败")
+              message.error('取消任务失败')
             })
           } else if (job.curBuildingQueueItemId) {
-            store.dispatch("cancelQueueItemAct", job.curBuildingQueueItemId).then(res => {
-              message.success("取消队列成功")
+            store.dispatch('cancelQueueItemAct', job.curBuildingQueueItemId).then(res => {
+              message.success('取消队列成功')
             }).catch(err => {
-              message.error("取消队列失败")
+              message.error('取消队列失败')
             })
           }
 
@@ -269,7 +270,7 @@ export default defineComponent({
     }
 
     const showLog = async (job: any) => {
-      buildLog.value = ""
+      buildLog.value = ''
       logJobName.value = job.name
       job.fetchedSize = 0
       showLogModal.value = true
@@ -281,16 +282,16 @@ export default defineComponent({
         if (job.buildStatus && (job.buildStatus === 'SUBMIT' || job.buildStatus === 'BUILDING')) {
           timingGetBuildConsole(job)
         } else {
-          store.dispatch("buildConsoleAct", { jobName: job.fullName, number: 'lastBuild', start: 0 }).then(res => {
+          store.dispatch('buildConsoleAct', { jobName: job.fullName, number: 'lastBuild', start: 0 }).then(res => {
             buildLog.value = res.data
           }).catch(err => {
             console.error(`[getLog] ==> param ==> ${job} fail reason => ${err}`)
             if (err.response.status == 404) {
-              buildLog.value = "暂无日志"
+              buildLog.value = '暂无日志'
             }
           })
         }
-        resolve("success")
+        resolve('success')
       })
     }
 
@@ -303,7 +304,7 @@ export default defineComponent({
         return true
       }
       try {
-        return await store.dispatch("buildConsoleAct", { jobName: job.fullName, number: 'lastBuild', start: 0 }).then(res => {
+        return await store.dispatch('buildConsoleAct', { jobName: job.fullName, number: 'lastBuild', start: 0 }).then(res => {
           if (res.headers['content-length'] === 0) {
             job.buildConsoleTask = setTimeout(() => timingGetBuildConsole(job), 5000)
             return true
@@ -340,7 +341,7 @@ export default defineComponent({
           jobName: job.name,
           buildNum: job.curBuildingNumber
         }
-        store.dispatch("buildHistoryAct", params).then(res => {
+        store.dispatch('buildHistoryAct', params).then(res => {
           let result = res.data
           if (result.building === false && result.result) {
             job['buildStatus'] = 'FINISH'
@@ -363,7 +364,7 @@ export default defineComponent({
           }
         })
       } else {
-        await store.dispatch("queueItemAct", job.curBuildingQueueItemId).then(res => {
+        await store.dispatch('queueItemAct', job.curBuildingQueueItemId).then(res => {
           let result = res
           if (result.executable && result.executable.number) {
             job['curBuildingNumber'] = result.executable.number
@@ -414,7 +415,7 @@ export default defineComponent({
         utools.showNotification(job.name + '构建中止！')
       } finally {
         if (!timing) {
-          let data = await store.dispatch("jobDetailsAct", job.name).then(res => res.data)
+          let data = await store.dispatch('jobDetailsAct', job.name).then(res => res.data)
           job['color'] = data.color
           utils.jobStatusToIcon(job)
           await getJobLastBuild(job)
@@ -430,16 +431,16 @@ export default defineComponent({
     const getJobLastBuild = async (job: any) => {
       const params = {
         jobName: job.fullName,
-        buildNum: "lastBuild"
+        buildNum: 'lastBuild'
       }
 
       try {
-        const res = await store.dispatch("buildHistoryAct", params)
+        const res = await store.dispatch('buildHistoryAct', params)
         const result = res.data
         job.lastBuildTime = result.timestamp;
         if (result.changeSet && result.changeSet.items.length > 0) {
           let item = result.changeSet.items[result.changeSet.items.length - 1];
-          job.lastChange = item.msg + " (" + item.authorEmail + ")";
+          job.lastChange = item.msg + ' (' + item.authorEmail + ')';
         }
         if (result.building) {
           job.buildStatus = 'BUILDING'
@@ -450,17 +451,17 @@ export default defineComponent({
         console.error(`[getJobLastBuild] param ==> ${job} ==> fail reason ==> ${error}`)
       }
 
-      
+
     }
 
     const getJobList = (viewName: string, workflowName: string) => {
-      store.dispatch("jobsAct", { viewName, workflowName }).then(async res => {
+      store.dispatch('jobsAct', { viewName, workflowName }).then(async res => {
         const jobList = res.jobs
         for (let job of jobList) {
           job.lastBuildTime = 'N/A'
           utils.jobStatusToIcon(job)
 
-          switch(job._class) {
+          switch (job._class) {
             case JenkinsClassTypeEnum.FREE_STYLE_PROJECT:
               job.fullName = job.name
               break
@@ -473,8 +474,8 @@ export default defineComponent({
           }
 
           // 设置面包屑数据
-          if(!!viewName) {
-            breadCrumb.value.view = {name : viewName, displayName:(viewName === 'all' ? '所有' : viewName)}
+          if (!!viewName) {
+            breadCrumb.value.view = { name: viewName, displayName: (viewName === 'all' ? '所有' : viewName) }
           }
           if (!workflowName) {
             breadCrumb.value.workflow = null
@@ -483,10 +484,10 @@ export default defineComponent({
         }
 
         jobs.value = jobList
-        store.dispatch("listLoadingAct", false)
+        store.dispatch('listLoadingAct', false)
       }).catch(err => {
-        store.dispatch("listLoadingAct", false)
-        message.error("加载列表失败！")
+        store.dispatch('listLoadingAct', false)
+        message.error('加载列表失败！')
       })
 
       clearJobNameSearch()
@@ -498,7 +499,7 @@ export default defineComponent({
     }
 
     const viewNameList = () => {
-      store.dispatch("baseInfoAct").then(res => {
+      store.dispatch('baseInfoAct').then(res => {
         const vns = res.views;
         const selectVns = []
         for (let vn of vns) {
@@ -512,11 +513,11 @@ export default defineComponent({
     }
 
     const handleJKNameValue = (value: string, option: SelectOption) => {
-      store.dispatch("configAct", option.data)
-      store.dispatch("listLoadingAct", true)
+      store.dispatch('configAct', option.data)
+      store.dispatch('listLoadingAct', true)
       viewNameList()
-      viewName.value = "all"
-      getJobList(viewName.value, '')
+      viewName.value = '所有'
+      getJobList('all', '')
     }
 
     const handleViewNameValue = (value: string, option: SelectOption) => {
@@ -526,7 +527,7 @@ export default defineComponent({
     const refreshJobsList = () => {
       getJobList(breadCrumb.value.view.name, breadCrumb.value.workflow.name)
       setTimeout(() => {
-        message.success("刷新成功")
+        message.success('刷新成功')
       }, 100)
     }
 
@@ -543,8 +544,8 @@ export default defineComponent({
       showLogModal.value = false
     }
 
-    const handleBreadCrumb = (viewName:string) => {
-      getJobList(viewName, "")
+    const handleBreadCrumb = (viewName: string) => {
+      getJobList(viewName, '')
     }
 
     watch(buildLog, () => {
@@ -571,7 +572,7 @@ export default defineComponent({
       if (currentBuildJob.value && currentBuildJob.value.parameterProcessed && currentBuildJob.value.parameterProcessed.length > 0) {
         if (jobParameterTypeOfSelectNoChoice.value.indexOf(params.type) !== -1) {
           for (const k1 in params.choices) {
-            if(params.choices[k1] == "") {
+            if (params.choices[k1] == '') {
               continue
             }
             options.push({
@@ -581,7 +582,7 @@ export default defineComponent({
           }
         } else {
           for (const k2 in params.choices) {
-            if(params.choices[k2] == "") {
+            if (params.choices[k2] == '') {
               continue
             }
             options.push({
@@ -595,15 +596,15 @@ export default defineComponent({
     }
 
     return {
-      jobParameterTypeOfSeparator: ref(["ParameterSeparatorDefinition"]),
-      jobParameterTypeOfFile: ref(["FileParameterDefinition", "PatchParameterDefinition"]),
-      jobParameterTypeOfTextArea: ref(["TextParameterDefinition", "PersistentTextParameterDefinition"]),
-      jobParameterTypeOfCheckbox: ref(["BooleanParameterDefinition", "PersistentBooleanParameterDefinition", ""]),
-      jobParameterTypeOfInput: ref(["StringParameterDefinition", "DateParameterDefinition",
-        "LabelParameterDefinition", "PersistentStringParameterDefinition", "PasswordParameterDefinition", "PT_TEXTBOX"]),
-      jobParameterTypeOfSelect: ref(["ChoiceParameterDefinition", "CascadeChoiceParameter", "BooleanParameterDefinition",
-        "NodeParameterDefinition", "PersistentChoiceParameterDefinition",
-        "PT_MULTI_SELECT", "PT_SINGLE_SELECT", "PT_TAG", "PT_BRANCH", "PT_BRANCH_TAG", "PT_REVISION", "PT_PULL_REQUEST"]),
+      jobParameterTypeOfSeparator: ref(['ParameterSeparatorDefinition']),
+      jobParameterTypeOfFile: ref(['FileParameterDefinition', 'PatchParameterDefinition']),
+      jobParameterTypeOfTextArea: ref(['TextParameterDefinition', 'PersistentTextParameterDefinition']),
+      jobParameterTypeOfCheckbox: ref(['BooleanParameterDefinition', 'PersistentBooleanParameterDefinition', '']),
+      jobParameterTypeOfInput: ref(['StringParameterDefinition', 'DateParameterDefinition',
+        'LabelParameterDefinition', 'PersistentStringParameterDefinition', 'PasswordParameterDefinition', 'PT_TEXTBOX']),
+      jobParameterTypeOfSelect: ref(['ChoiceParameterDefinition', 'CascadeChoiceParameter', 'BooleanParameterDefinition',
+        'NodeParameterDefinition', 'PersistentChoiceParameterDefinition',
+        'PT_MULTI_SELECT', 'PT_SINGLE_SELECT', 'PT_TAG', 'PT_BRANCH', 'PT_BRANCH_TAG', 'PT_REVISION', 'PT_PULL_REQUEST']),
       jobParameterTypeOfSelectNoChoice,
       configList,
       jkName,
@@ -636,9 +637,9 @@ export default defineComponent({
   beforeMount() {
 
     if (!this.$store.getters.listLoading) {
-      this.$store.dispatch("listLoadingAct", true)
+      this.$store.dispatch('listLoadingAct', true)
       this.viewNameList()
-      this.getJobList("all", "")
+      this.getJobList('all', '')
     }
   },
   mounted() {
@@ -659,9 +660,11 @@ export default defineComponent({
     </n-gi>
     <n-gi>
       <n-button type="success" @click="refreshJobsList">
-          <n-icon size="18"><refresh-sharp /></n-icon>
-          <span>刷新</span>
-        </n-button>
+        <n-icon size="18">
+          <refresh-sharp />
+        </n-icon>
+        <span>刷新</span>
+      </n-button>
     </n-gi>
   </n-grid>
 
@@ -685,6 +688,8 @@ export default defineComponent({
 
   <!-- 数据表格 -->
   <n-data-table class="data-table" 
+    :bordered="false"
+    :single-line="false"
     :max-height=580 
     :loading="showLoading" 
     :columns="columns" 
@@ -764,7 +769,11 @@ export default defineComponent({
   margin-top: 10px;
 }
 
-pre, code, kbd, samp, tt {
+pre,
+code,
+kbd,
+samp,
+tt {
   font-size: var(--font-size-monospace);
 }
 
@@ -799,6 +808,7 @@ a {
   color: #000;
   /* 去除默认的颜色和点击后变化的颜色 */
 }
+
 .bread-crumb-item {
   /* 手指样式 */
   cursor: pointer;
@@ -809,6 +819,7 @@ a {
   position: relative;
   top: 2px;
 }
+
 .n-button .n-icon {
   position: relative;
   top: -2px;
@@ -816,8 +827,9 @@ a {
 
 /* 模态框调整样式 */
 .n-dialog.n-modal {
-    width: 21% !important;
+  width: 21% !important;
 }
+
 .n-modal {
   max-height: 200px !important;
   overflow-y: scroll;

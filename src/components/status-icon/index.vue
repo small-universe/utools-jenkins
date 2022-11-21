@@ -2,7 +2,7 @@
 <template>
   <div class="status-icon" style="display:inline-flex">
     <span style="width: 48px; height: 48px; " class="build-status-icon__wrapper">
-      <div v-if="isWorkflow" style="position:relative; margin: -8px 0px 0px 3px">
+      <div v-if="isWorkflow" style="cursor: pointer; position:relative; margin: -8px 0px 0px 3px">
         <span class="build-status-icon-branch__outer">
           <svg viewBox="0 0 16 16" focusable="false" class="svg-icon-branch">
             <use :xlink:href="'#status_branch'"></use>
