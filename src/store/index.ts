@@ -1,25 +1,33 @@
 import { createStore } from 'vuex'
-import { 
-  jobsList,
+import {
+  listJobsOfView,
   buildHistory,
-  jobDetails, 
+  jobDetails,
   queueItem,
-  baseInfo,
+  getBaseInfo,
   buildJob,
   buildConsole,
   cancelBuild,
   cancelQueueItem,
   getJob,
-  handleGitParameter } from "@/api/jenkins"
+  handleGitParameter,
+  listJobOfworkflow
+} from "@/api/jenkins"
+import { IJobListRequestParam } from '@/components/jenkins/model'
+import { IGitPlatformAccount } from '@/components/repository/model'
+import { currentUser } from '@/api/gitlab'
 
 const state = {
   config: {},
   baseInfo: {},
   jobs: [],
+  workflowJobs: [],
   listLoading: false,
   buildHistorys: [],
   jobDetails: {},
-  queueItem: {}
+  queueItem: {},
+  currentView: {},
+  gitAccount: {}
 }
 
 const getters = {
@@ -28,11 +36,14 @@ const getters = {
   },
   listLoading: (state: any) => {
     return state.listLoading
+  },
+  gitAccount: (state: any) => {
+    return state.gitAccount
   }
 }
 
 const mutations = {
-  configMuts(state:any, config:any) {
+  configMuts(state: any, config: any) {
     state.config = config
   },
 
@@ -40,29 +51,33 @@ const mutations = {
     state.listLoading = listLoading
   },
 
-  baseInfoMuts(state: any, { data }:{ data: any}) {
+  baseInfoMuts(state: any, { data }: { data: any }) {
     state.baseInfo = data
   },
 
-  jobsMuts(state:any, { data }:{data:any}) {
+  jobsMuts(state: any, { data }: { data: any }) {
     state.jobs = data
   },
 
-  buildHistoryMuts(state:any,{data}:{data:any}) {
+  buildHistoryMuts(state: any, { data }: { data: any }) {
     state.buildHistorys = data
   },
 
-  jobDetailsMuts(state: any,{data}:{data:any}) {
+  jobDetailsMuts(state: any, { data }: { data: any }) {
     state.jobDetails = data;
   },
 
-  queueItemMuts(state: any, {data}:{data:any}) {
+  queueItemMuts(state: any, { data }: { data: any }) {
     state.queueItem = data
+  },
+
+  gitAccountMuts(state: any, { data }: { data: any }) {
+    state.gitAccount = data
   }
 }
 
 const actions = {
-  configAct(context:any, config:any) {
+  configAct(context: any, config: any) {
     context.commit("configMuts", config)
   },
 
@@ -72,7 +87,7 @@ const actions = {
 
   baseInfoAct(context: any, config: any) {
     return new Promise((resolve, reject) => {
-      baseInfo(config || context.state.config).then(res => {
+      getBaseInfo(config || context.state.config).then(res => {
         if (!res) {
           reject('获取基本信息失败！')
           return
@@ -85,25 +100,25 @@ const actions = {
     })
   },
 
-  jobsAct(context:any, viewName:string) {
-    return new Promise(async (resolve,reject) => {
-      const jobs = await jobsList(context.state.config,viewName)
+  jobsAct(context: any, param: IJobListRequestParam) {
+    return new Promise(async (resolve, reject) => {
+      let jobs: any = []
+      if (!!param.workflowName) {
+        jobs = await listJobOfworkflow(context.state.config, param.workflowName)
+      } else {
+        jobs = await listJobsOfView(context.state.config, param.viewName)
+      }
 
-      if(!jobs || jobs.length > 0) {
-        reject("获取任务列表失败！")
+      if (!jobs || jobs.length > 0) {
+        reject(`获取任务列表失败 param -> ${param}`)
         return
       }
-      // for (let job of jobs.jobs) {
-      //   job.lastBuildTime = 'N/A';
-      //   utils.jobStatusToIcon(job)
-      //   //this.getJobLastBuild(job)
-      // }
-      // console.log(jobs);
-      
+
       resolve(jobs)
       context.commit("jobsMuts", jobs)
     })
   },
+
   buildHistoryAct(context: any, data: any) {
     return new Promise((resolve, reject) => {
       buildHistory(context.state.config, data).then(res => {
@@ -208,12 +223,26 @@ const actions = {
     })
   },
   handleGitParameterAct(context: any, data: any) {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       await handleGitParameter(context.state.config, data);
       resolve("成功")
     })
+  },
+  gitAccountAct(context: any, loginReq: IGitPlatformAccount) {
+    return new Promise(async (resolve, reject) => {
+      const account = await currentUser(loginReq.host, loginReq.token)
+      if (!!account) {
+        context.commit('gitAccountMuts', account)
+        console.log("2-----", account)
+        resolve({ status: 200, data: account})
+      } else {
+        resolve({ status: 400 })
+      }
+    })
   }
 }
+
+
 
 export default createStore({
   state,

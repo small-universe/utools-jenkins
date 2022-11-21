@@ -3,7 +3,6 @@ let utools = window.utools;
 let utils = {
   getConfigList: function () {
     let allDocs = utools.db.allDocs("jenkins");
-    console.log('config list', allDocs)
     let alldata = [];
     let noActive = true;
     for (let i = 0; i < allDocs.length; i++) {
@@ -17,7 +16,6 @@ let utils = {
     if (noActive && alldata.length > 0) {
       alldata[0].data.active = true;
     }
-    console.log('alldata', alldata)
     return alldata;
   },
   uuid: function () {
@@ -103,6 +101,11 @@ let utils = {
         job.anime = true
         job.color = 'icon-nobuilt'
         break
+      default:
+        //工作流任务
+        job.icon = 'pipeline-multi-branch-fold'
+        job.anime = false
+        job.isWorkflow = true
     }
   },
   parseDomain: function (uri: string) {

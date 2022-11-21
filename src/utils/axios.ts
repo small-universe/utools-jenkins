@@ -17,7 +17,10 @@ const axiosConfig = (config: any) => {
   const _axios:AxiosInstance = createAxios(config)
   // 请求拦截器
   _axios.interceptors.request.use(
-      conf => {
+        conf => {
+          if (conf && conf.headers && config?.crumb) {
+            conf.headers[config.crumb.crumbRequestField] = config.crumb.crumb
+          }
           return conf
         },
         error => {

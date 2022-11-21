@@ -2,7 +2,7 @@
   <n-config-provider :locale="zhCN" :date-locale="dateZhCN">
     <n-message-provider>
       <n-dialog-provider>
-        <jenkins-view/>
+        <home-view/>
       </n-dialog-provider>
     </n-message-provider>
   </n-config-provider>
@@ -11,11 +11,11 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { zhCN, dateZhCN } from 'naive-ui'
-import JenkinsView from '@/views/JenkinsView.vue'
+import HomeView from '@/views/HomeView.vue'
 
 export default defineComponent({
   components: {
-    JenkinsView
+    HomeView
   },
   setup() {
     return {

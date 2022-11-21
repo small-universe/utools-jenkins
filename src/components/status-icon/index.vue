@@ -1,19 +1,31 @@
 
 <template>
-  <div class="status-icon">
+  <div class="status-icon" style="display:inline-flex">
     <span style="width: 48px; height: 48px; " class="build-status-icon__wrapper">
-      <span class="build-status-icon__outer">
-        <svg viewBox="0 0 24 24" focusable="false" :class="anime ? 'svg-icon icon-anime ' + color: 'svg-icon ' + color">
-          <use :xlink:href="anime ? '#status_build-status-in-progress' : '#status_build-status-static'"></use>
+      <div v-if="isWorkflow" style="position:relative; margin: -8px 0px 0px 3px">
+        <span class="build-status-icon-branch__outer">
+          <svg viewBox="0 0 16 16" focusable="false" class="svg-icon-branch">
+            <use :xlink:href="'#status_branch'"></use>
+          </svg>
+        </span>
+        <svg viewBox="0 0 24 24" focusable="false" :class="'svg-icon ' + name">
+            <use :xlink:href="'#status_' + name"></use>
+          </svg>
+      </div>
+      <div v-else>
+        <span class="build-status-icon__outer">
+          <svg viewBox="0 0 24 24" focusable="false" :class="anime ? 'svg-icon icon-anime ' + color: 'svg-icon ' + color">
+            <use :xlink:href="anime ? '#status_build-status-in-progress' : '#status_build-status-static'"></use>
+          </svg>
+        </span>
+        <svg viewBox="0 0 24 24" focusable="false" :class="'svg-icon ' + color">
+          <use :xlink:href="'#status_' + name"></use>
         </svg>
-      </span>
-      <svg viewBox="0 0 24 24" focusable="false" :class="'svg-icon ' + color">
-        <use :xlink:href="'#status_' + name"></use>
-      </svg>
-  </span>
+      </div>
+    </span>
   </div>
 </template>
-<script>
+<script lang="ts">
 import { defineComponent } from 'vue'
 
 export default defineComponent({
@@ -31,6 +43,11 @@ export default defineComponent({
             type: Boolean,
             required: false,
             default: true
+        },
+        isWorkflow: {
+            type: Boolean,
+            required: false,
+            default: false
         }
     },
     setup() {
@@ -38,7 +55,7 @@ export default defineComponent({
         const req = require.context('@/assets/svg', true, /\.svg$/)
 
         // 解析获取的.svg文件的文件名称，并返回
-        const requireAll = (requireContext) => {
+        const requireAll = (requireContext: __WebpackModuleApi.RequireContext) => {
             return requireContext.keys().map(requireContext)
         }
         requireAll(req)
@@ -64,6 +81,17 @@ export default defineComponent({
     height: 100%;
     transform: translate(-50%, -50%);
   }
+  .build-status-icon-branch__outer {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 80;
+    right: 45%;
+    width: 100%;
+    height: 100%;
+    transform: rotate(90deg);
+  }
+  
   .svg-icon {
     display: inline-block;
     vertical-align: middle;

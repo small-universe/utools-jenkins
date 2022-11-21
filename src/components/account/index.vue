@@ -4,6 +4,7 @@ import { FormInst, NButton, NIcon, useMessage,useDialog, FormItemRule } from "na
 import { Edit, Delete, HelpFilled } from '@vicons/carbon'
 import utils from "@/utils/toolsbox"
 import { useStore } from 'vuex'
+import { urlRegexUtil } from '@/utils/regex';
 
 const utools = window.utools
 
@@ -88,18 +89,6 @@ const initModel = () => {
     return obj
 }
 
-const strRegex = '^(https|http|ftp|rtsp|mms)?://'
-      + '?(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
-      + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
-      + '|' // 允许IP和DOMAIN（域名）
-      + '([0-9a-z_!~*\'()-]+.)*' // 域名- www.
-      + '([0-9a-z][0-9a-z-]{0,61})?[0-9a-z].' // 二级域名
-      + '[a-z]{2,6})' // first level domain- .com or .museum
-      + '(:[0-9]{1,5})?' // 端口- :80
-      + '((/?)|' // a slash isn't required if there is no file name
-      + '(/[0-9a-z_!~*\'().;?:@&=+$,%#-]+)+/?)$'
-const oRegUrl = new RegExp(strRegex);
-
 const rules = {
         name: {
           required: true,
@@ -112,7 +101,7 @@ const rules = {
           validator(rule: FormItemRule, value: string) {
               if(!value) {
                   return new Error("请输入Jenkins URL")
-              } else if(!oRegUrl.test(value)) {
+              } else if(!urlRegexUtil.test(value)) {
                   return new Error("请输入正确的Url地址")
               }
               return true
@@ -143,7 +132,7 @@ function getConfList() {
 }
 
 export default defineComponent({
-    name: "Config",
+    name: "Account",
     components: { HelpFilled },
     computed: {
 
@@ -198,7 +187,7 @@ export default defineComponent({
 
                     showModalRef.value = false
                 } else {
-                    console.log(errors)
+                    console.error(errors)
                     message.error("验证失败")
                 }
             })
@@ -263,7 +252,6 @@ export default defineComponent({
                         message.error("无法连接！")
                     })
                 } else {
-                    console.log(errors)
                     testLoading.value = false
                     message.error("验证失败")
                 }
