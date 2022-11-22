@@ -15,7 +15,7 @@ import {
 } from "@/api/jenkins"
 import { IJobListRequestParam } from '@/components/jenkins/model'
 import { IGitPlatformAccount } from '@/components/repository/model'
-import { currentUser } from '@/api/gitlab'
+import { getCurrentUser, listGitProject } from '@/api/gitlab'
 
 const state = {
   config: {},
@@ -27,7 +27,8 @@ const state = {
   jobDetails: {},
   queueItem: {},
   currentView: {},
-  gitAccount: {}
+  gitAccount: {},
+  gitProjectsLoading: false
 }
 
 const getters = {
@@ -39,6 +40,9 @@ const getters = {
   },
   gitAccount: (state: any) => {
     return state.gitAccount
+  },
+  gitProjectsLoading: (state: any) => {
+    return state.gitProjectsLoading
   }
 }
 
@@ -73,7 +77,13 @@ const mutations = {
 
   gitAccountMuts(state: any, { data }: { data: any }) {
     state.gitAccount = data
-  }
+  },
+  gitProjectsMuts(state: any, { data }: { data: any }) {
+    state.gitProjects = data
+  },
+  gitProjectsLoadingMuts(state: any, { data }: { data: any }) {
+    state.gitProjectsLoding = data
+  },
 }
 
 const actions = {
@@ -230,16 +240,30 @@ const actions = {
   },
   gitAccountAct(context: any, loginReq: IGitPlatformAccount) {
     return new Promise(async (resolve, reject) => {
-      const account = await currentUser(loginReq.host, loginReq.token)
+      const account = await getCurrentUser(loginReq.host, loginReq.token)
       if (!!account) {
         context.commit('gitAccountMuts', account)
-        console.log("2-----", account)
-        resolve({ status: 200, data: account})
+        resolve({ status: 200, data: account })
       } else {
         resolve({ status: 400 })
       }
     })
-  }
+  },
+  gitProjectsAct(context: any, loginReq: IGitPlatformAccount) {
+    return new Promise(async (resolve, reject) => {
+      listGitProject({ ...loginReq }).then(res => {
+        context.commit('gitProjectsMuts', res)
+        resolve(res)
+      }
+      ).catch(err => {
+        console.error(`[gitProjectsAct] ==> fail reason ==> ${err}`)
+      })
+    })
+  },
+  gitProjectsLoadingAct(context: any, gitProjectsLoading: boolean) {
+    context.commit("gitProjectsLoadingMuts", gitProjectsLoading)
+  },
+
 }
 
 

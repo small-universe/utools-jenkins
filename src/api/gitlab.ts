@@ -8,13 +8,13 @@ import { Gitlab, Projects, Users } from '@gitbeaker/browser';
  * @param host 
  * @param token 
  */
-export const currentUser = async (host: string, token: string): Promise<IGitPlatformAccount> => {
-    let user = { 
-        host: host, 
-        token: token, 
-        avatarUrl: "", 
-        username: "", 
-        platform: GitPlatformEnum.GIT_LAB 
+export const getCurrentUser = async (host: string, token: string): Promise<IGitPlatformAccount> => {
+    let user = {
+        host: host,
+        token: token,
+        avatarUrl: "",
+        username: "",
+        platform: GitPlatformEnum.GIT_LAB
     }
     new Users({ host, token }).current().then(res => {
         user.avatarUrl = res.avatar_url
@@ -24,4 +24,11 @@ export const currentUser = async (host: string, token: string): Promise<IGitPlat
     })
 
     return user
+}
+
+export const listGitProject = async (request: { host: string, token: string }): Promise<any> => {
+    if(!request || !request.host || !request.token) {
+        return
+    }
+    return new Projects(request).all()
 }
